@@ -4,11 +4,6 @@ from pyglet.window import key
 from core import GameElement
 import sys
 
-f = open("map.txt")
-f_read = f.read()
-f.close()
-
-text_map = f_read.split()
 
 #### DO NOT TOUCH ####
 GAME_BOARD = None
@@ -25,6 +20,10 @@ class Wall(GameElement):
     IMAGE = "Wall"
     SOLID = True
 
+    def wall_clear(self):
+        global SOLID
+        SOLID = False
+
 class TallWall(GameElement):
     IMAGE = "TallWall"
     SOLID = True
@@ -32,6 +31,16 @@ class TallWall(GameElement):
 class Tree(GameElement):
     IMAGE = "UglyTree"
     SOLID = False
+
+    def interact(self, player):
+        global PLAYER
+
+        GAME_BOARD.del_el(self.x, self.y)
+        gem = Gem()
+        print "I'm interacting with a tree!  yay! adding gem at: %d, %d" % (self.x, self.y)
+        GAME_BOARD.register(gem)
+        GAME_BOARD.set_el(PLAYER.x, PLAYER.y-1, gem)
+
 
 class TallTree(GameElement):
     IMAGE = "TallTree"
@@ -62,35 +71,61 @@ class Character(GameElement):
 
         return None
 
+class MagicKey(GameElement):
+    IMAGE = "Key"
+    SOLID = False
+
 
 class Gem(GameElement):
     IMAGE = "BlueGem"
     SOLID = False
 
+
     def interact(self, player):
         player.inventory.append(self)
+        self.IMAGE = "Wall"
         GAME_BOARD.draw_msg("You just acquired a gem! You have %d items!"%(len(player.inventory)))
+
+        if len(player.inventory) >= 5:
+            player_has_key(PLAYER)
+
 
 ####   End class definitions    ####
 
+# open text map to set gameboard and create dictionary 
+
+f = open("map.txt")
+f_read = f.read()
+f.close()
+
+text_map = f_read.split()
+
+set_board = {".": None, "+": TallWall, "-": Wall, "#": Tree, "*": TallTree, "$": Rock}
+
+magic_key = MagicKey()
+
+# function to place object on the scoreboard
 def place_object_list(pos, object_type):
-
-    #objects = []
-
-    # for pos in positions:
     obj = object_type()
     GAME_BOARD.register(obj)
     GAME_BOARD.set_el(pos[0], pos[1], obj)
-    #objects.append(obj)
 
-    #return objects
-
+def player_has_key(player):
+    player.inventory.append(magic_key)
+    GAME_BOARD.draw_msg("You just got the key to the castle -- GO RESCUE THE BOY!!!")
+    GAME_BOARD.del_el(4,4)
 
 def initialize():
     """Put game initialization code here"""
 
-    set_board = {".": None, "+": TallWall, "-": Wall, "#": Tree, "*": TallTree, "$": Rock}
-
+    # set key player on board
+    global PLAYER
+    PLAYER = Character()
+    GAME_BOARD.register(PLAYER)
+    GAME_BOARD.set_el(1, 6, PLAYER)
+    print PLAYER
+    
+    # read through text map to set up gameboard using the place_object list function
     for y in range(len(text_map)):
         for x in range(len(text_map[y])):
             pos = (x,y)
@@ -99,80 +134,18 @@ def initialize():
             else:
                 place_object_list(pos,set_board.get(text_map[y][x]))
 
-
-    # rock_positions = [
-    #         (1,3),
-    #         (3,1),
-    #         (3,5)
-    # ]   
-
-    # rocks = place_object_list(rock_positions, Rock)
-    # # rocks[-1].SOLID = False
-        
-    # for rock in rocks:
-    #     print rock
-
-    # # Build the wall that traps the stupid boy.
-    # wall_positions = [
-    #         (3,3),
-    #         (4,2),
-    #         (4,4),
-    #         (5,3)
-    # ]
-
-    # tallwall_positions = [
-    #         (3,2),
-    #         (3,4),
-    #         (5,2),
-    #         (5,4)
-    # ]
-
-
-    # walls = place_object_list(wall_positions, Wall)
-    # talls = place_object_list(tallwall_positions, TallWall)
-
+    # set trapped boy
     boy = Character()
     boy.IMAGE = "Boy"
     GAME_BOARD.register(boy)
     GAME_BOARD.set_el(4,3,boy)
 
-    # tree_positions = [
-    #         (0,1),
-    #         (0,6),
-    #         (4,0),
-    #         (5,7),
-    #         (4,6),
-    #         (6,5),
-    #         (5,5),
-    #         (5,6),
-    #         (6,6),
-    #         (6,7),
-    #         (2,6),
-    #         (7,2)
-    # ]
-
-    # trees = place_object_list(tree_positions, Tree)
-    
-    # tall_tree = Tree()
-    # tall_tree.IMAGE = "TallTree"
-    # tall_tree.SOLID = True
-    # GAME_BOARD.register(tall_tree)
-    # GAME_BOARD.set_el(7, 0 , tall_tree)
-
-    # In the initialize() function
-    global PLAYER
-    PLAYER = Character()
-    GAME_BOARD.register(PLAYER)
-    GAME_BOARD.set_el(2, 2, PLAYER)
-    print PLAYER
-    
+    # random start message
     GAME_BOARD.draw_msg("This game is wicked awesome.")
-
-    gem = Gem()
-    GAME_BOARD.register(gem)
-    GAME_BOARD.set_el(2, 1, gem)
+    print set_board.get(text_map[2][4])
 
 def keyboard_handler():
+    global text_map
     direction = None
 
     if KEYBOARD[key.UP]:
@@ -190,6 +163,7 @@ def keyboard_handler():
         next_y = next_location[1]
 
         existing_el = GAME_BOARD.get_el(next_x, next_y)
+        print type(existing_el)
 
         if existing_el:
             existing_el.interact(PLAYER) 
@@ -197,4 +171,5 @@ def keyboard_handler():
         if existing_el is None or not existing_el.SOLID:
             GAME_BOARD.del_el(PLAYER.x, PLAYER.y)
             GAME_BOARD.set_el(next_x, next_y, PLAYER)
+
 
