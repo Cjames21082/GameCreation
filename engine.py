@@ -4,8 +4,8 @@ import pyglet
 from pyglet.window import key
 from core import GameElement
 
-SCREEN_X = 800
-SCREEN_Y = 700
+SCREEN_X = 900
+SCREEN_Y = 800
 
 game_window = pyglet.window.Window(SCREEN_X, SCREEN_Y)
 
@@ -22,11 +22,13 @@ TILE_HEIGHT = 0
 def setup_images():
     filenames = {
             "Wall": "Wall Block.png",
+            "TallWall" : "Wall Block Tall.png",
             "Block": "Plain Block.png",
             "GrassBlock": "Grass Block.png",
             "StoneBlock": "Stone Block.png",
             "ShortTree": "Tree Short.png",
             "TallTree": "Tree Tall.png",
+            "UglyTree": "Tree Ugly.png",
             "Rock": "Rock.png",
             "Chest": "Chest Closed.png",
             "DoorClosed": "Door Tall Closed.png",
