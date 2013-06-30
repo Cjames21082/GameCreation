@@ -20,11 +20,11 @@ class Wall(GameElement):
     IMAGE = "Wall"
     SOLID = True
 
-    def wall_clear(self):
-        global SOLID
-        SOLID = False
+    # def wall_clear(self):
+    #     global SOLID
+    #     SOLID = False
 
-class TallWall(GameElement):
+class TallWall(Wall):
     IMAGE = "TallWall"
     SOLID = True
 
@@ -34,17 +34,25 @@ class Tree(GameElement):
 
     def interact(self, player):
         global PLAYER
+        global GEM_STORAGE
 
         GAME_BOARD.del_el(self.x, self.y)
         gem = Gem()
+        gem.x = self.x
+        gem.y = self.y
         print "I'm interacting with a tree!  yay! adding gem at: %d, %d" % (self.x, self.y)
         GAME_BOARD.register(gem)
-        GAME_BOARD.set_el(PLAYER.x, PLAYER.y-1, gem)
+        
+        #remember the gem created for future usage
+        GEM_STORAGE.append(gem)
 
 
-class TallTree(GameElement):
+class TallTree(Tree):
     IMAGE = "TallTree"
     SOLID = True
+
+    def interact(self, player):     # override interact function from higher level - class Tree
+        pass
 
 class Rock(GameElement):
     IMAGE = "Rock"
@@ -120,6 +128,9 @@ def initialize():
 
     # set key player on board
     global PLAYER
+    global GEM_STORAGE
+
+    GEM_STORAGE = []
     PLAYER = Character()
     GAME_BOARD.register(PLAYER)
     GAME_BOARD.set_el(1, 6, PLAYER)
@@ -146,6 +157,8 @@ def initialize():
 
 def keyboard_handler():
     global text_map
+    global GEM_STORAGE
+
     direction = None
 
     if KEYBOARD[key.UP]:
@@ -162,8 +175,14 @@ def keyboard_handler():
         next_x = next_location[0]
         next_y = next_location[1]
 
-        existing_el = GAME_BOARD.get_el(next_x, next_y)
-        print type(existing_el)
+        # handles the exception out of bounds and exits the function
+        try:            
+            existing_el = GAME_BOARD.get_el(next_x, next_y)
+        #print type(existing_el)
+        except IndexError:
+            print "You have gone out of bounds!"
+            return
+
 
         if existing_el:
             existing_el.interact(PLAYER) 
@@ -171,5 +190,10 @@ def keyboard_handler():
         if existing_el is None or not existing_el.SOLID:
             GAME_BOARD.del_el(PLAYER.x, PLAYER.y)
             GAME_BOARD.set_el(next_x, next_y, PLAYER)
-
+            #if GEM_STORAGE != []:                       # won't iterate if list is empty
+            for g in GEM_STORAGE:
+                if g.x != PLAYER.x or g.y != PLAYER.y:
+                    GEM_STORAGE.pop(0)
+                    GAME_BOARD.set_el(g.x, g.y,g)
+                
 

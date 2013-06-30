@@ -16,3 +16,16 @@ class GameElement(object):
 
     def update(self, dt):
         pass
+
+# # Multiple inheritance
+# class Class1(Object):
+#     def foo(self):
+#         pass
+
+# class Class2(Object):
+#     def foo(self):
+#         pass
+
+# class Class3(Class1, Class2)
+#     def foo(self):
+#         super(Class2, self).foo()
